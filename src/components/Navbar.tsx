@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import {
   Calendar,
   Home,
@@ -22,7 +23,12 @@ export const Navbar: React.FC = () => {
     businessSettings,
   } = useApp();
 
-  const navItems: { id: ScreenTab; label: string; mobileLabel: string; icon: React.ReactNode }[] = [
+  const navItems: {
+    id: ScreenTab;
+    label: string;
+    mobileLabel: string;
+    icon: React.ReactNode;
+  }[] = [
     {
       id: 'home',
       label: 'Início',
@@ -67,40 +73,52 @@ export const Navbar: React.FC = () => {
         {/* Zone 1: Single Text Element Wordmark */}
         <button
           onClick={() => handleNav('home')}
-          className="font-display text-lg md:text-xl font-bold tracking-wider text-[#F5F2ED] text-left whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A84F1F] rounded"
+          className="font-display text-lg md:text-xl font-extrabold tracking-wider text-[#F5F2ED] text-left whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A84F1F] rounded"
         >
           {businessSettings.shopName || 'BARBERIA'}
         </button>
 
         {/* Zone 2: Clean Text Navigation Links (Desktop) */}
-        <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-[#A9A29B]">
+        <nav className="hidden md:flex items-center gap-7 text-sm font-semibold text-[#A9A29B]">
           {navItems.map((item) => {
             const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => handleNav(item.id)}
-                className={`py-1 whitespace-nowrap transition-colors border-b-2 ${
-                  isActive
-                    ? 'text-[#F5F2ED] border-[#A84F1F]'
-                    : 'border-transparent hover:text-[#F5F2ED]'
+                className={`relative py-1.5 whitespace-nowrap transition-colors ${
+                  isActive ? 'text-[#F5F2ED]' : 'hover:text-[#F5F2ED]'
                 }`}
               >
-                {item.label}
+                <span>{item.label}</span>
+                {isActive && (
+                  <motion.div
+                    layoutId="desktop-nav-underline"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    className="absolute left-0 right-0 bottom-0 h-0.5 bg-[#A84F1F] rounded-full"
+                  />
+                )}
               </button>
             );
           })}
           {isAdmin && (
             <button
               onClick={() => handleNav('admin')}
-              className={`py-1 whitespace-nowrap transition-colors border-b-2 flex items-center gap-1.5 ${
+              className={`relative py-1.5 whitespace-nowrap transition-colors flex items-center gap-1.5 ${
                 activeTab === 'admin'
-                  ? 'text-[#A84F1F] border-[#A84F1F]'
-                  : 'border-transparent text-[#A9A29B] hover:text-[#F5F2ED]'
+                  ? 'text-[#A84F1F]'
+                  : 'text-[#A9A29B] hover:text-[#F5F2ED]'
               }`}
             >
               <ShieldCheck className="w-4 h-4" />
               <span>Painel Admin</span>
+              {activeTab === 'admin' && (
+                <motion.div
+                  layoutId="desktop-nav-underline"
+                  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  className="absolute left-0 right-0 bottom-0 h-0.5 bg-[#A84F1F] rounded-full"
+                />
+              )}
             </button>
           )}
         </nav>
@@ -119,7 +137,9 @@ export const Navbar: React.FC = () => {
           <button
             onClick={toggleTheme}
             className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-white/10 text-[#A9A29B] hover:text-[#F5F2ED] hover:border-white/20 transition-colors"
-            aria-label={theme === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}
+            aria-label={
+              theme === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'
+            }
           >
             {theme === 'dark' ? (
               <Sun className="w-4 h-4" />
@@ -127,12 +147,14 @@ export const Navbar: React.FC = () => {
               <Moon className="w-4 h-4" />
             )}
           </button>
-          <button
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.96 }}
             onClick={() => handleNav('booking')}
-            className="px-4 py-2 min-h-[40px] rounded-lg bg-[#A84F1F] hover:bg-[#8E4118] active:scale-[0.98] text-[#F5F2ED] text-xs md:text-sm font-semibold whitespace-nowrap transition-all"
+            className="px-4 py-2 min-h-[40px] rounded-lg bg-[#A84F1F] hover:bg-[#8E4118] text-[#F5F2ED] text-xs md:text-sm font-bold whitespace-nowrap transition-colors"
           >
             Agendar agora
-          </button>
+          </motion.button>
         </div>
       </header>
 
@@ -147,12 +169,19 @@ export const Navbar: React.FC = () => {
             <button
               key={item.id}
               onClick={() => handleNav(item.id)}
-              className={`min-h-[48px] flex flex-col items-center justify-center transition-colors ${
+              className={`relative min-h-[48px] flex flex-col items-center justify-center transition-colors ${
                 isActive ? 'text-[#A84F1F]' : 'text-[#A9A29B] hover:text-[#F5F2ED]'
               }`}
             >
+              {isActive && (
+                <motion.div
+                  layoutId="mobile-nav-indicator"
+                  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  className="absolute top-0 w-8 h-0.5 bg-[#A84F1F] rounded-full"
+                />
+              )}
               {item.icon}
-              <span className="text-[11px] font-medium tracking-tight mt-1 whitespace-nowrap">
+              <span className="text-[11px] font-semibold tracking-tight mt-1 whitespace-nowrap">
                 {item.mobileLabel}
               </span>
             </button>

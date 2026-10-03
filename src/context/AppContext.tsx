@@ -284,7 +284,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       qHaircuts,
       (snapshot) => {
         if (!snapshot.empty) {
-          const list = snapshot.docs.map((d) => d.data() as Haircut);
+          const initialMap = new Map(INITIAL_HAIRCUTS.map((h) => [h.id, h]));
+          const list = snapshot.docs.map((d) => {
+            const raw = d.data() as Haircut;
+            const fallback = initialMap.get(raw.id);
+            return fallback ? { ...raw, imageUrl: fallback.imageUrl } : raw;
+          });
           setHaircuts(list);
         }
         setIsCatalogLoading(false);
@@ -314,7 +319,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       qBarbers,
       (snapshot) => {
         if (!snapshot.empty) {
-          const list = snapshot.docs.map((d) => d.data() as Barber);
+          const initialBarberMap = new Map(INITIAL_BARBERS.map((b) => [b.id, b]));
+          const list = snapshot.docs.map((d) => {
+            const raw = d.data() as Barber;
+            const fallback = initialBarberMap.get(raw.id);
+            return {
+              ...raw,
+              photoUrl: fallback ? fallback.photoUrl : raw.photoUrl,
+              whatsapp: '552197507533',
+            };
+          });
           setBarbers(list);
         }
       },
@@ -334,7 +348,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const mainDoc =
             snapshot.docs.find((d) => d.id === 'main') || snapshot.docs[0];
           if (mainDoc) {
-            setBusinessSettings(mainDoc.data() as BusinessSettings);
+            const raw = mainDoc.data() as BusinessSettings;
+            setBusinessSettings({
+              ...raw,
+              phone: '(21) 9750-7533',
+              whatsapp: '552197507533',
+            });
           }
         }
       },

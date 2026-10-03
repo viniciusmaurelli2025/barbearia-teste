@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import {
   Calendar,
   Heart,
@@ -91,22 +92,28 @@ export const CutsCatalogScreen: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-10 space-y-8 pb-24">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
+      className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-10 space-y-8 pb-24"
+    >
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/10 pb-6">
         <div>
-          <p className="text-xs font-medium tracking-widest text-[#A84F1F] mb-1">
-            CATÁLOGO EDITORIAL
+          <p className="text-xs font-bold tracking-widest text-[#A84F1F] mb-1">
+            CATÁLOGO EDITORIAL · FOTOS REAIS
           </p>
-          <h1 className="font-display text-3xl md:text-4xl font-bold text-[#F5F2ED]">
+          <h1 className="font-display text-3xl md:text-4xl font-extrabold text-[#F5F2ED]">
             Biblioteca de Cortes Masculinos
           </h1>
           <p className="text-sm text-[#A9A29B] mt-1 max-w-2xl">
-            Explore referências clássicas e contemporâneas, salve seus favoritos, simule no seu rosto com IA ou agende diretamente.
+            Explore referências clássicas e contemporâneas em fotos reais, salve seus favoritos, simule no seu rosto com IA ou agende diretamente.
           </p>
         </div>
         <div className="text-xs text-[#A9A29B] font-mono-num">
-          {filteredCuts.length} {filteredCuts.length === 1 ? 'corte encontrado' : 'cortes disponíveis'}
+          {filteredCuts.length}{' '}
+          {filteredCuts.length === 1 ? 'corte encontrado' : 'cortes disponíveis'}
         </div>
       </div>
 
@@ -185,17 +192,19 @@ export const CutsCatalogScreen: React.FC = () => {
           {HAIRCUT_CATEGORIES.map((cat) => {
             const active = selectedCategory === cat;
             return (
-              <button
+              <motion.button
+                whileHover={{ y: -1 }}
+                whileTap={{ scale: 0.96 }}
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`min-h-[40px] px-3.5 py-2 rounded-lg text-xs font-medium whitespace-nowrap shrink-0 transition-colors ${
+                className={`min-h-[40px] px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-colors ${
                   active
-                    ? 'bg-[#A84F1F] text-[#F5F2ED]'
+                    ? 'bg-[#A84F1F] text-[#F5F2ED] shadow-md'
                     : 'bg-[#14110F] text-[#A9A29B] hover:text-[#F5F2ED] border border-white/10'
                 }`}
               >
                 {cat}
-              </button>
+              </motion.button>
             );
           })}
         </div>
@@ -203,7 +212,11 @@ export const CutsCatalogScreen: React.FC = () => {
 
       {/* Empty State */}
       {filteredCuts.length === 0 ? (
-        <div className="rounded-2xl bg-[#14110F] border border-white/10 p-12 text-center space-y-4">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="rounded-2xl bg-[#14110F] border border-white/10 p-12 text-center space-y-4"
+        >
           <p className="font-display text-lg font-bold text-[#F5F2ED]">
             Nenhum corte encontrado para os filtros selecionados
           </p>
@@ -222,105 +235,117 @@ export const CutsCatalogScreen: React.FC = () => {
           >
             Mostrar todos os cortes
           </button>
-        </div>
+        </motion.div>
       ) : (
-        /* Grid of Haircut Cards */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {filteredCuts.map((cut) => {
-            const isFav = favoriteCutIds.includes(cut.id);
-            return (
-              <article
-                key={cut.id}
-                onClick={() => setActiveCutDetail(cut)}
-                className="group cursor-pointer rounded-2xl bg-[#14110F] border border-white/10 hover:border-[#A84F1F]/60 overflow-hidden flex flex-col justify-between transition-all"
-              >
-                <div>
-                  {/* Image container */}
-                  <div className="relative aspect-[3/4] overflow-hidden">
-                    <ResilientImage
-                      src={cut.imageUrl}
-                      alt={cut.name}
-                      className="w-full h-full group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#070605] via-transparent to-transparent opacity-80" />
+        /* Grid of Haircut Cards with Staggered Transitions */
+        <motion.div
+          layout
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
+        >
+          <AnimatePresence mode="popLayout">
+            {filteredCuts.map((cut, idx) => {
+              const isFav = favoriteCutIds.includes(cut.id);
+              return (
+                <motion.article
+                  layout
+                  key={cut.id}
+                  initial={{ opacity: 0, scale: 0.95, y: 16 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.94 }}
+                  transition={{ duration: 0.28, delay: Math.min(idx * 0.04, 0.25) }}
+                  whileHover={{ y: -6 }}
+                  onClick={() => setActiveCutDetail(cut)}
+                  className="group cursor-pointer rounded-2xl bg-[#14110F] border border-white/10 hover:border-[#A84F1F]/70 overflow-hidden flex flex-col justify-between transition-colors shadow-lg"
+                >
+                  <div>
+                    {/* Image container */}
+                    <div className="relative aspect-[3/4] overflow-hidden">
+                      <ResilientImage
+                        src={cut.imageUrl}
+                        alt={cut.name}
+                        className="w-full h-full group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#070605] via-transparent to-transparent opacity-80" />
 
-                    {/* Top Right Quick Actions */}
-                    <div className="absolute top-3 right-3 flex items-center gap-1.5">
-                      <button
-                        onClick={(e) => handleQuickShare(e, cut)}
-                        className="min-h-[40px] min-w-[40px] rounded-full bg-[#070605]/80 backdrop-blur-md border border-white/15 flex items-center justify-center text-[#F5F2ED] hover:border-[#A84F1F] transition-colors"
-                        aria-label={`Compartilhar ${cut.name}`}
-                      >
-                        <Share2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleFavoriteCut(cut.id);
-                        }}
-                        className="min-h-[40px] min-w-[40px] rounded-full bg-[#070605]/80 backdrop-blur-md border border-white/15 flex items-center justify-center text-[#F5F2ED] hover:border-[#A84F1F] transition-colors"
-                        aria-label={`Favoritar ${cut.name}`}
-                      >
-                        <Heart
-                          className={`w-4 h-4 ${
-                            isFav ? 'fill-[#A84F1F] text-[#A84F1F]' : ''
-                          }`}
-                        />
-                      </button>
-                    </div>
-
-                    {/* Bottom overlay title */}
-                    <div className="absolute bottom-3 left-4 right-4">
-                      {/* Clean unboxed metadata */}
-                      <div className="text-xs text-[#A9A29B] mb-0.5">
-                        <span>{cut.category}</span>
-                        <span className="mx-1.5">·</span>
-                        <span>{cut.length}</span>
-                        <span className="mx-1.5">·</span>
-                        <span className="font-mono-num">{cut.serviceDuration}</span>
+                      {/* Top Right Quick Actions */}
+                      <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                        <button
+                          onClick={(e) => handleQuickShare(e, cut)}
+                          className="min-h-[40px] min-w-[40px] rounded-full bg-[#070605]/80 backdrop-blur-md border border-white/15 flex items-center justify-center text-[#F5F2ED] hover:border-[#A84F1F] transition-colors"
+                          aria-label={`Compartilhar ${cut.name}`}
+                        >
+                          <Share2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFavoriteCut(cut.id);
+                          }}
+                          className="min-h-[40px] min-w-[40px] rounded-full bg-[#070605]/80 backdrop-blur-md border border-white/15 flex items-center justify-center text-[#F5F2ED] hover:border-[#A84F1F] transition-colors"
+                          aria-label={`Favoritar ${cut.name}`}
+                        >
+                          <Heart
+                            className={`w-4 h-4 ${
+                              isFav ? 'fill-[#A84F1F] text-[#A84F1F]' : ''
+                            }`}
+                          />
+                        </button>
                       </div>
-                      <h2 className="font-display text-xl font-bold text-[#F5F2ED]">
-                        {cut.name}
-                      </h2>
+
+                      {/* Bottom overlay title */}
+                      <div className="absolute bottom-3 left-4 right-4">
+                        <div className="text-xs text-[#A9A29B] mb-0.5">
+                          <span>{cut.category}</span>
+                          <span className="mx-1.5">·</span>
+                          <span>{cut.length}</span>
+                          <span className="mx-1.5">·</span>
+                          <span className="font-mono-num">
+                            {cut.serviceDuration}
+                          </span>
+                        </div>
+                        <h2 className="font-display text-xl font-bold text-[#F5F2ED]">
+                          {cut.name}
+                        </h2>
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    <div className="p-4">
+                      <p className="text-xs text-[#A9A29B] line-clamp-2 leading-relaxed">
+                        {cut.description}
+                      </p>
                     </div>
                   </div>
 
-                  {/* Description */}
-                  <div className="p-4">
-                    <p className="text-xs text-[#A9A29B] line-clamp-2 leading-relaxed">
-                      {cut.description}
-                    </p>
+                  {/* Card Footer Buttons */}
+                  <div className="px-4 pb-4 pt-2 grid grid-cols-2 gap-2 border-t border-white/5">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openTryOnWithCut(cut);
+                      }}
+                      className="min-h-[42px] px-3 py-2 rounded-xl bg-[#070605] hover:bg-[#582610] border border-white/10 text-[#F5F2ED] text-xs font-medium flex items-center justify-center gap-1.5 transition-colors whitespace-nowrap"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-[#A84F1F]" />
+                      <span>Simular IA</span>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openBookingWithCut(cut);
+                      }}
+                      className="min-h-[42px] px-3 py-2 rounded-xl bg-[#A84F1F] hover:bg-[#8E4118] text-[#F5F2ED] text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors whitespace-nowrap"
+                    >
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>Agendar</span>
+                    </button>
                   </div>
-                </div>
-
-                {/* Card Footer Buttons */}
-                <div className="px-4 pb-4 pt-2 grid grid-cols-2 gap-2 border-t border-white/5">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openTryOnWithCut(cut);
-                    }}
-                    className="min-h-[42px] px-3 py-2 rounded-xl bg-[#070605] hover:bg-[#582610] border border-white/10 text-[#F5F2ED] text-xs font-medium flex items-center justify-center gap-1.5 transition-colors whitespace-nowrap"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-[#A84F1F]" />
-                    <span>Simular IA</span>
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openBookingWithCut(cut);
-                    }}
-                    className="min-h-[42px] px-3 py-2 rounded-xl bg-[#A84F1F] hover:bg-[#8E4118] text-[#F5F2ED] text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors whitespace-nowrap"
-                  >
-                    <Calendar className="w-3.5 h-3.5" />
-                    <span>Agendar</span>
-                  </button>
-                </div>
-              </article>
-            );
-          })}
-        </div>
+                </motion.article>
+              );
+            })}
+          </AnimatePresence>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 };

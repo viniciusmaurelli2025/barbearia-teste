@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Montserrat', sans-serif;
+  --font-mono: 'Montserrat', sans-serif;
+}
+
 @layer base {
   :root {
     --bg-primary: #070605;
@@ -23,26 +29,28 @@
     --border-subtle: rgba(0, 0, 0, 0.10);
   }
 
+  html {
+    scroll-behavior: smooth;
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
   body {
     background-color: var(--bg-primary);
     color: var(--text-primary);
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
 
-  h1, h2, h3, .font-display {
-    font-family: 'Syne', sans-serif;
+  h1, h2, h3, h4, .font-display, .font-editorial {
+    font-family: 'Montserrat', sans-serif;
     text-wrap: balance;
   }
 
   .font-mono-num {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Montserrat', sans-serif;
     font-variant-numeric: tabular-nums;
-  }
-
-  .font-editorial {
-    font-family: 'Cinzel', serif;
   }
 }
 

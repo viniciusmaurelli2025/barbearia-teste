@@ -173,7 +173,7 @@ export const ProfileScreen: React.FC = () => {
                 type="tel"
                 value={phoneInput}
                 onChange={(e) => setPhoneInput(e.target.value)}
-                placeholder="(11) 99999-9999"
+                placeholder="(21) 9750-7533"
                 maxLength={30}
                 className="w-full min-h-[44px] px-3.5 py-2 rounded-xl bg-[#070605] border border-white/15 text-sm font-mono-num text-[#F5F2ED] focus:outline-none focus:border-[#A84F1F]"
               />
@@ -220,14 +220,14 @@ export const ProfileScreen: React.FC = () => {
             </button>
 
             <a
-              href={`https://wa.me/${businessSettings.whatsapp.replace(/\D/g, '')}`}
+              href={`https://wa.me/${(businessSettings.whatsapp || '552197507533').replace(/\D/g, '')}`}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full min-h-[48px] px-4 py-3 rounded-xl bg-[#582610]/50 hover:bg-[#582610] border border-[#A84F1F]/40 flex items-center justify-between text-xs font-semibold text-[#F5F2ED] transition-colors"
             >
               <span>Atendimento Direto BARBERIA</span>
               <span className="flex items-center gap-1.5 text-[#A84F1F]">
-                <MessageCircle className="w-4 h-4" /> WhatsApp
+                <MessageCircle className="w-4 h-4" /> WhatsApp (21) 9750-7533
               </span>
             </a>
           </div>
