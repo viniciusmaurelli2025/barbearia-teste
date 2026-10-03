@@ -1,0 +1,397 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Default-Deny Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core Primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        request.auth.token.email == 'viniciusmaurelli2025@gmail.com'
+      );
+    }
+
+    // Validation Blueprints
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll(['uid', 'displayName', 'favoriteCutIds', 'themePreference', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'favoriteCutIds', 'preferredBarberId', 'themePreference', 'createdAt', 'updatedAt'])
+        && data.uid is string && data.uid == userId && isValidId(data.uid)
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100
+        && data.favoriteCutIds is list && data.favoriteCutIds.size() <= 50
+        && (data.favoriteCutIds.size() == 0 || (data.favoriteCutIds[0] is string && data.favoriteCutIds[0].size() <= 128))
+        && (!('preferredBarberId' in data) || (data.preferredBarberId is string && data.preferredBarberId.size() <= 128))
+        && data.themePreference is string && data.themePreference in ['dark', 'light']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidUserPrivateInfo(data, userId) {
+      return data.keys().hasAll(['uid', 'phone', 'email', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'phone', 'email', 'updatedAt'])
+        && data.uid is string && data.uid == userId && isValidId(data.uid)
+        && data.phone is string && data.phone.size() <= 30
+        && data.email is string && data.email.size() <= 150
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidBarber(data, barberId) {
+      return data.keys().hasAll(['id', 'name', 'roleTitle', 'bio', 'photoUrl', 'specialties', 'rating', 'completedCuts', 'availableHours', 'whatsapp', 'nextAvailable', 'isPublic', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'name', 'roleTitle', 'bio', 'photoUrl', 'specialties', 'rating', 'completedCuts', 'availableHours', 'whatsapp', 'nextAvailable', 'isPublic', 'updatedAt'])
+        && data.id is string && data.id == barberId && isValidId(data.id)
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 100
+        && data.roleTitle is string && data.roleTitle.size() <= 100
+        && data.bio is string && data.bio.size() <= 600
+        && data.photoUrl is string && data.photoUrl.size() <= 500
+        && data.specialties is list && data.specialties.size() <= 10
+        && (data.specialties.size() == 0 || (data.specialties[0] is string && data.specialties[0].size() <= 60))
+        && data.rating is number && data.rating >= 0 && data.rating <= 5
+        && data.completedCuts is int && data.completedCuts >= 0
+        && data.availableHours is list && data.availableHours.size() <= 24
+        && (data.availableHours.size() == 0 || (data.availableHours[0] is string && data.availableHours[0].size() <= 10))
+        && data.whatsapp is string && data.whatsapp.size() <= 30
+        && data.nextAvailable is string && data.nextAvailable.size() <= 60
+        && data.isPublic is bool
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidServiceItem(data, serviceId) {
+      return data.keys().hasAll(['id', 'name', 'description', 'duration', 'price', 'category', 'isPublic', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'name', 'description', 'duration', 'price', 'category', 'isPublic', 'updatedAt'])
+        && data.id is string && data.id == serviceId && isValidId(data.id)
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 100
+        && data.description is string && data.description.size() <= 400
+        && data.duration is string && data.duration.size() <= 40
+        && data.price is number && data.price >= 0 && data.price <= 10000
+        && data.category is string && data.category.size() <= 60
+        && data.isPublic is bool
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidHaircut(data, haircutId) {
+      return data.keys().hasAll(['id', 'name', 'category', 'length', 'style', 'description', 'maintenanceLevel', 'recommendedHairType', 'serviceDuration', 'imageUrl', 'barberIds', 'featured', 'isPublic', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'name', 'category', 'length', 'style', 'description', 'maintenanceLevel', 'recommendedHairType', 'serviceDuration', 'imageUrl', 'barberIds', 'featured', 'isPublic', 'updatedAt'])
+        && data.id is string && data.id == haircutId && isValidId(data.id)
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 100
+        && data.category is string && data.category.size() <= 60
+        && data.length is string && data.length in ['Curto', 'Médio', 'Longo']
+        && data.style is string && data.style.size() <= 60
+        && data.description is string && data.description.size() <= 600
+        && data.maintenanceLevel is string && data.maintenanceLevel in ['Baixa', 'Média', 'Alta']
+        && data.recommendedHairType is string && data.recommendedHairType.size() <= 120
+        && data.serviceDuration is string && data.serviceDuration.size() <= 40
+        && data.imageUrl is string && data.imageUrl.size() <= 500
+        && data.barberIds is list && data.barberIds.size() <= 10
+        && (data.barberIds.size() == 0 || (data.barberIds[0] is string && data.barberIds[0].size() <= 128))
+        && data.featured is bool
+        && data.isPublic is bool
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidAppointment(data, appointmentId) {
+      return data.keys().hasAll(['id', 'userId', 'customerName', 'customerPhone', 'serviceId', 'serviceName', 'servicePrice', 'barberId', 'barberName', 'haircutId', 'haircutName', 'date', 'time', 'status', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'userId', 'customerName', 'customerPhone', 'serviceId', 'serviceName', 'servicePrice', 'barberId', 'barberName', 'haircutId', 'haircutName', 'date', 'time', 'status', 'createdAt', 'updatedAt'])
+        && data.id is string && data.id == appointmentId && isValidId(data.id)
+        && data.userId is string && isValidId(data.userId)
+        && data.customerName is string && data.customerName.size() >= 1 && data.customerName.size() <= 100
+        && data.customerPhone is string && data.customerPhone.size() >= 8 && data.customerPhone.size() <= 30
+        && data.serviceId is string && isValidId(data.serviceId)
+        && data.serviceName is string && data.serviceName.size() <= 100
+        && data.servicePrice is number && data.servicePrice >= 0 && data.servicePrice <= 10000
+        && data.barberId is string && isValidId(data.barberId)
+        && data.barberName is string && data.barberName.size() <= 100
+        && data.haircutId is string && isValidId(data.haircutId)
+        && data.haircutName is string && data.haircutName.size() <= 100
+        && data.date is string && data.date.size() <= 20
+        && data.time is string && data.time.size() <= 10
+        && data.status is string && data.status in ['confirmed', 'completed', 'cancelled']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidBusinessSettings(data, settingId) {
+      return data.keys().hasAll(['id', 'shopName', 'heroEyebrow', 'heroTitle', 'heroDescription', 'address', 'latitude', 'longitude', 'phone', 'whatsapp', 'instagram', 'email', 'openingHours', 'whatsappTemplate', 'blockedSlots', 'isPublic', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'shopName', 'heroEyebrow', 'heroTitle', 'heroDescription', 'address', 'latitude', 'longitude', 'phone', 'whatsapp', 'instagram', 'email', 'openingHours', 'whatsappTemplate', 'blockedSlots', 'isPublic', 'updatedAt'])
+        && data.id is string && data.id == settingId && isValidId(data.id)
+        && data.shopName is string && data.shopName.size() >= 1 && data.shopName.size() <= 100
+        && data.heroEyebrow is string && data.heroEyebrow.size() <= 80
+        && data.heroTitle is string && data.heroTitle.size() <= 140
+        && data.heroDescription is string && data.heroDescription.size() <= 300
+        && data.address is string && data.address.size() <= 250
+        && data.latitude is number && data.latitude >= -90 && data.latitude <= 90
+        && data.longitude is number && data.longitude >= -180 && data.longitude <= 180
+        && data.phone is string && data.phone.size() <= 30
+        && data.whatsapp is string && data.whatsapp.size() <= 30
+        && data.instagram is string && data.instagram.size() <= 100
+        && data.email is string && data.email.size() <= 150
+        && data.openingHours is string && data.openingHours.size() <= 200
+        && data.whatsappTemplate is string && data.whatsappTemplate.size() <= 1000
+        && data.blockedSlots is list && data.blockedSlots.size() <= 50
+        && (data.blockedSlots.size() == 0 || (data.blockedSlots[0] is string && data.blockedSlots[0].size() <= 40))
+        && data.isPublic is bool
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidSavedReference(data, refId) {
+      return data.keys().hasAll(['id', 'userId', 'haircutId', 'haircutName', 'category', 'imageUrl', 'notes', 'createdAt'])
+        && data.keys().hasOnly(['id', 'userId', 'haircutId', 'haircutName', 'category', 'imageUrl', 'notes', 'createdAt'])
+        && data.id is string && data.id == refId && isValidId(data.id)
+        && data.userId is string && data.userId == request.auth.uid && isValidId(data.userId)
+        && data.haircutId is string && isValidId(data.haircutId)
+        && data.haircutName is string && data.haircutName.size() <= 100
+        && data.category is string && data.category.size() <= 60
+        && data.imageUrl is string && data.imageUrl.size() <= 500
+        && data.notes is string && data.notes.size() <= 300
+        && data.createdAt is timestamp;
+    }
+
+    function isValidAiGeneration(data, genId) {
+      return data.keys().hasAll(['id', 'userId', 'haircutId', 'haircutName', 'faceShape', 'compatibilityScore', 'summary', 'previewDataUrl', 'createdAt'])
+        && data.keys().hasOnly(['id', 'userId', 'haircutId', 'haircutName', 'faceShape', 'compatibilityScore', 'summary', 'previewDataUrl', 'createdAt'])
+        && data.id is string && data.id == genId && isValidId(data.id)
+        && data.userId is string && data.userId == request.auth.uid && isValidId(data.userId)
+        && data.haircutId is string && isValidId(data.haircutId)
+        && data.haircutName is string && data.haircutName.size() <= 100
+        && data.faceShape is string && data.faceShape.size() <= 60
+        && data.compatibilityScore is int && data.compatibilityScore >= 0 && data.compatibilityScore <= 100
+        && data.summary is string && data.summary.size() <= 600
+        && data.previewDataUrl is string && data.previewDataUrl.size() <= 350000
+        && data.createdAt is timestamp;
+    }
+
+    // Connection health check endpoint
+    match /test/{docId} {
+      allow get: if isValidId(docId);
+    }
+
+    // Admins lookup collection
+    match /admins/{adminId} {
+      allow get: if isSignedIn() && isValidId(adminId) && request.auth.uid == adminId;
+    }
+
+    // 1. Users Public/Preference Profile
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isAdmin() && resource.data.themePreference in ['dark', 'light'];
+      allow create: if isOwner(userId)
+        && isValidId(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isSignedIn()
+        && isValidId(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() ||
+          (isOwner(userId) && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'favoriteCutIds', 'preferredBarberId', 'themePreference', 'updatedAt']))
+        );
+      allow delete: if isAdmin() && isValidId(userId);
+
+      // Master Gate Subcollection: Isolated PII
+      match /private/{docId} {
+        allow get: if isSignedIn()
+          && isValidId(userId)
+          && isValidId(docId)
+          && (isOwner(userId) || isAdmin())
+          && exists(/databases/$(database)/documents/users/$(userId));
+        allow create: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(docId)
+          && isValidUserPrivateInfo(incoming(), userId)
+          && incoming().updatedAt == request.time
+          && exists(/databases/$(database)/documents/users/$(userId));
+        allow update: if isSignedIn()
+          && isValidId(userId)
+          && isValidId(docId)
+          && isValidUserPrivateInfo(incoming(), userId)
+          && incoming().uid == existing().uid
+          && incoming().updatedAt == request.time
+          && exists(/databases/$(database)/documents/users/$(userId))
+          && (
+            isAdmin() ||
+            (isOwner(userId) && incoming().diff(existing()).affectedKeys().hasOnly(['phone', 'email', 'updatedAt']))
+          );
+        allow delete: if isAdmin() && isValidId(userId) && isValidId(docId);
+      }
+    }
+
+    // 2. Barbers Catalog
+    match /barbers/{barberId} {
+      allow get: if isValidId(barberId) && (resource == null || resource.data.isPublic == true || isAdmin());
+      allow list: if resource.data.isPublic == true;
+      allow create: if isAdmin()
+        && isValidId(barberId)
+        && isValidBarber(incoming(), barberId)
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin()
+        && isValidId(barberId)
+        && isValidBarber(incoming(), barberId)
+        && incoming().id == existing().id
+        && incoming().updatedAt == request.time;
+      allow delete: if isAdmin() && isValidId(barberId);
+    }
+
+    // 3. Services Catalog
+    match /services/{serviceId} {
+      allow get: if isValidId(serviceId) && (resource == null || resource.data.isPublic == true || isAdmin());
+      allow list: if resource.data.isPublic == true;
+      allow create: if isAdmin()
+        && isValidId(serviceId)
+        && isValidServiceItem(incoming(), serviceId)
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin()
+        && isValidId(serviceId)
+        && isValidServiceItem(incoming(), serviceId)
+        && incoming().id == existing().id
+        && incoming().updatedAt == request.time;
+      allow delete: if isAdmin() && isValidId(serviceId);
+    }
+
+    // 4. Haircuts Catalog
+    match /haircuts/{haircutId} {
+      allow get: if isValidId(haircutId) && (resource == null || resource.data.isPublic == true || isAdmin());
+      allow list: if resource.data.isPublic == true;
+      allow create: if isAdmin()
+        && isValidId(haircutId)
+        && isValidHaircut(incoming(), haircutId)
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin()
+        && isValidId(haircutId)
+        && isValidHaircut(incoming(), haircutId)
+        && incoming().id == existing().id
+        && incoming().updatedAt == request.time;
+      allow delete: if isAdmin() && isValidId(haircutId);
+    }
+
+    // 5. Business Settings
+    match /business_settings/{settingId} {
+      allow get: if isValidId(settingId) && (resource == null || resource.data.isPublic == true || isAdmin());
+      allow list: if resource.data.isPublic == true;
+      allow create: if isAdmin()
+        && isValidId(settingId)
+        && isValidBusinessSettings(incoming(), settingId)
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin()
+        && isValidId(settingId)
+        && isValidBusinessSettings(incoming(), settingId)
+        && incoming().id == existing().id
+        && incoming().updatedAt == request.time;
+      allow delete: if isAdmin() && isValidId(settingId);
+    }
+
+    // 6. Appointments
+    match /appointments/{appointmentId} {
+      allow get: if isSignedIn()
+        && isValidId(appointmentId)
+        && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn()
+        && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isVerifiedUser()
+        && isValidId(appointmentId)
+        && isValidAppointment(incoming(), appointmentId)
+        && incoming().userId == request.auth.uid
+        && incoming().status == 'confirmed'
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+      allow update: if isVerifiedUser()
+        && isValidId(appointmentId)
+        && isValidAppointment(incoming(), appointmentId)
+        && incoming().id == existing().id
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin() ||
+          (
+            existing().userId == request.auth.uid
+            && existing().status == 'confirmed'
+            && incoming().status == 'cancelled'
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+          )
+        );
+      allow delete: if isAdmin() && isValidId(appointmentId);
+    }
+
+    // 7. Saved References
+    match /saved_references/{refId} {
+      allow get: if isSignedIn()
+        && isValidId(refId)
+        && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn()
+        && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isVerifiedUser()
+        && isValidId(refId)
+        && isValidSavedReference(incoming(), refId)
+        && incoming().createdAt == request.time
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+      allow update: if isVerifiedUser()
+        && isValidId(refId)
+        && isValidSavedReference(incoming(), refId)
+        && incoming().id == existing().id
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt
+        && (
+          isAdmin() ||
+          (existing().userId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['notes']))
+        );
+      allow delete: if isSignedIn()
+        && isValidId(refId)
+        && (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    // 8. AI Generations
+    match /ai_generations/{genId} {
+      allow get: if isSignedIn()
+        && isValidId(genId)
+        && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn()
+        && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isVerifiedUser()
+        && isValidId(genId)
+        && isValidAiGeneration(incoming(), genId)
+        && incoming().createdAt == request.time
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+      allow update: if isAdmin()
+        && isValidId(genId)
+        && isValidAiGeneration(incoming(), genId)
+        && incoming().id == existing().id
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt;
+      allow delete: if isSignedIn()
+        && isValidId(genId)
+        && (existing().userId == request.auth.uid || isAdmin());
+    }
+  }
+}

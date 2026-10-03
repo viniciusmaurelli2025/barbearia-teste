@@ -1,0 +1,6 @@
+{
+  "name": "BARBERIA — Estilo, Corte & IA",
+  "description": "Aplicativo premium de agendamento para barbearia moderna com catálogo de cortes, simulação visual por Inteligência Artificial (Barber AI) e confirmação via WhatsApp.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,517 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Public profile and preferences of a barbershop client or administrator.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID of the user.",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name of the customer.",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "favoriteCutIds": {
+          "type": "array",
+          "description": "Bounded list of favorite haircut IDs (up to 50).",
+          "maxLength": 50
+        },
+        "preferredBarberId": {
+          "type": "string",
+          "description": "Optional preferred barber ID.",
+          "maxLength": 128
+        },
+        "themePreference": {
+          "type": "string",
+          "description": "UI theme preference.",
+          "enum": ["dark", "light"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": ["uid", "displayName", "favoriteCutIds", "themePreference", "createdAt", "updatedAt"]
+    },
+    "UserPrivateInfo": {
+      "title": "UserPrivateInfo",
+      "description": "Isolated PII contact details for a user (phone and email).",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID.",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Customer phone/WhatsApp number.",
+          "maxLength": 30
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Customer email address.",
+          "maxLength": 150
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": ["uid", "phone", "email", "updatedAt"]
+    },
+    "Barber": {
+      "title": "Barber",
+      "description": "Professional barber profile in the barbershop.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "roleTitle": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "bio": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "photoUrl": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "specialties": {
+          "type": "array",
+          "maxLength": 10
+        },
+        "rating": {
+          "type": "number"
+        },
+        "completedCuts": {
+          "type": "integer"
+        },
+        "availableHours": {
+          "type": "array",
+          "maxLength": 24
+        },
+        "whatsapp": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "nextAvailable": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "isPublic": {
+          "type": "boolean"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "name", "roleTitle", "bio", "photoUrl", "specialties", "rating", "completedCuts", "availableHours", "whatsapp", "nextAvailable", "isPublic", "updatedAt"]
+    },
+    "ServiceItem": {
+      "title": "ServiceItem",
+      "description": "Barbershop service offering with duration and price.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 400
+        },
+        "duration": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "price": {
+          "type": "number"
+        },
+        "category": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "isPublic": {
+          "type": "boolean"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "name", "description", "duration", "price", "category", "isPublic", "updatedAt"]
+    },
+    "Haircut": {
+      "title": "Haircut",
+      "description": "Haircut style item in the BARBERIA visual catalog.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "category": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "length": {
+          "type": "string",
+          "enum": ["Curto", "Médio", "Longo"]
+        },
+        "style": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "maintenanceLevel": {
+          "type": "string",
+          "enum": ["Baixa", "Média", "Alta"]
+        },
+        "recommendedHairType": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "serviceDuration": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "imageUrl": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "barberIds": {
+          "type": "array",
+          "maxLength": 10
+        },
+        "featured": {
+          "type": "boolean"
+        },
+        "isPublic": {
+          "type": "boolean"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "name", "category", "length", "style", "description", "maintenanceLevel", "recommendedHairType", "serviceDuration", "imageUrl", "barberIds", "featured", "isPublic", "updatedAt"]
+    },
+    "Appointment": {
+      "title": "Appointment",
+      "description": "Customer appointment booking record.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "customerName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "customerPhone": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 30
+        },
+        "serviceId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "serviceName": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "servicePrice": {
+          "type": "number"
+        },
+        "barberId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "barberName": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "haircutId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "haircutName": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "date": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "time": {
+          "type": "string",
+          "maxLength": 10
+        },
+        "status": {
+          "type": "string",
+          "enum": ["confirmed", "completed", "cancelled"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "userId", "customerName", "customerPhone", "serviceId", "serviceName", "servicePrice", "barberId", "barberName", "haircutId", "haircutName", "date", "time", "status", "createdAt", "updatedAt"]
+    },
+    "BusinessSettings": {
+      "title": "BusinessSettings",
+      "description": "Global barbershop configuration, contact info, address, and WhatsApp template.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "shopName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "heroEyebrow": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "heroTitle": {
+          "type": "string",
+          "maxLength": 140
+        },
+        "heroDescription": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "address": {
+          "type": "string",
+          "maxLength": 250
+        },
+        "latitude": {
+          "type": "number"
+        },
+        "longitude": {
+          "type": "number"
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "whatsapp": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "instagram": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 150
+        },
+        "openingHours": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "whatsappTemplate": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "blockedSlots": {
+          "type": "array",
+          "maxLength": 50
+        },
+        "isPublic": {
+          "type": "boolean"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "shopName", "heroEyebrow", "heroTitle", "heroDescription", "address", "latitude", "longitude", "phone", "whatsapp", "instagram", "email", "openingHours", "whatsappTemplate", "blockedSlots", "isPublic", "updatedAt"]
+    },
+    "SavedReference": {
+      "title": "SavedReference",
+      "description": "User saved haircut reference for quick booking and AI simulation.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "haircutId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "haircutName": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "category": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "imageUrl": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "userId", "haircutId", "haircutName", "category", "imageUrl", "notes", "createdAt"]
+    },
+    "AiGeneration": {
+      "title": "AiGeneration",
+      "description": "Saved AI virtual haircut try-on result metadata and preview.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "haircutId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "haircutName": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "faceShape": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "compatibilityScore": {
+          "type": "integer"
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "previewDataUrl": {
+          "type": "string",
+          "maxLength": 350000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "userId", "haircutId", "haircutName", "faceShape", "compatibilityScore", "summary", "previewDataUrl", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Public/preference user profile document."
+    },
+    "/users/{userId}/private/{docId}": {
+      "schema": { "$ref": "#/entities/UserPrivateInfo" },
+      "description": "Isolated PII contact info for the user."
+    },
+    "/barbers/{barberId}": {
+      "schema": { "$ref": "#/entities/Barber" },
+      "description": "Barbershop professionals catalog."
+    },
+    "/services/{serviceId}": {
+      "schema": { "$ref": "#/entities/ServiceItem" },
+      "description": "Barbershop services catalog."
+    },
+    "/haircuts/{haircutId}": {
+      "schema": { "$ref": "#/entities/Haircut" },
+      "description": "Visual catalog of men's haircuts."
+    },
+    "/appointments/{appointmentId}": {
+      "schema": { "$ref": "#/entities/Appointment" },
+      "description": "Customer bookings."
+    },
+    "/business_settings/{settingId}": {
+      "schema": { "$ref": "#/entities/BusinessSettings" },
+      "description": "Global barbershop settings and contact configuration."
+    },
+    "/saved_references/{refId}": {
+      "schema": { "$ref": "#/entities/SavedReference" },
+      "description": "User-saved haircut references."
+    },
+    "/ai_generations/{genId}": {
+      "schema": { "$ref": "#/entities/AiGeneration" },
+      "description": "User-saved Barber AI simulation results."
+    }
+  }
+}
